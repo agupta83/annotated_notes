@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Prioritized Experience Replay | AG’s Annotated Notes</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Prioritized Experience Replay" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Just my notes" />
+<meta property="og:description" content="Just my notes" />
+<link rel="canonical" href="https://agupta83.github.io/annotated_notes/rl/2021/07/21/Prioritized-Experience-Replay.html" />
+<meta property="og:url" content="https://agupta83.github.io/annotated_notes/rl/2021/07/21/Prioritized-Experience-Replay.html" />
+<meta property="og:site_name" content="AG’s Annotated Notes" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-07-21T00:00:00-05:00" />
+<script type="application/ld+json">
+{"description":"Just my notes","mainEntityOfPage":{"@type":"WebPage","@id":"https://agupta83.github.io/annotated_notes/rl/2021/07/21/Prioritized-Experience-Replay.html"},"url":"https://agupta83.github.io/annotated_notes/rl/2021/07/21/Prioritized-Experience-Replay.html","@type":"BlogPosting","headline":"Prioritized Experience Replay","dateModified":"2021-07-21T00:00:00-05:00","datePublished":"2021-07-21T00:00:00-05:00","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/annotated_notes/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://agupta83.github.io/annotated_notes/feed.xml" title="AG's Annotated Notes" /><link rel="shortcut icon" type="image/x-icon" href="/annotated_notes/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/annotated_notes/">AG&#39;s Annotated Notes</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/annotated_notes/about/">About Me</a><a class="page-link" href="/annotated_notes/search/">Search</a><a class="page-link" href="/annotated_notes/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Prioritized Experience Replay</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-07-21T00:00:00-05:00" itemprop="datePublished">
+        Jul 21, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      9 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/annotated_notes/categories/#RL">RL</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/agupta83/annotated_notes/tree/master/_notebooks/2021-07-21-Prioritized-Experience-Replay.ipynb" role="button" target="_blank">
+<img class="notebook-badge-image" src="/annotated_notes/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://mybinder.org/v2/gh/agupta83/annotated_notes/master?filepath=_notebooks%2F2021-07-21-Prioritized-Experience-Replay.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/annotated_notes/assets/badges/binder.svg" alt="Open In Binder"/>
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://colab.research.google.com/github/agupta83/annotated_notes/blob/master/_notebooks/2021-07-21-Prioritized-Experience-Replay.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/annotated_notes/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h1"><a href="#Experience-Replay">Experience Replay </a></li>
+<li class="toc-entry toc-h1"><a href="#Prioritized-ER">Prioritized ER </a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#Temporal-Difference-as-proxy-measurement">Temporal Difference as proxy measurement </a></li>
+<li class="toc-entry toc-h2"><a href="#Greedy-TD-error-prioritization">Greedy TD-error prioritization </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Issues">Issues </a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-entry toc-h1"><a href="#Stochastic-Prioritization">Stochastic Prioritization </a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#Variants">Variants </a></li>
+<li class="toc-entry toc-h2"><a href="#Bias">Bias </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h1"><a href="#Implementation">Implementation </a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#Rank-based-prioritization">Rank based prioritization </a></li>
+<li class="toc-entry toc-h2"><a href="#Propotional-prioritization">Propotional prioritization </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Binary-Segment-Tree">Binary Segment Tree </a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-entry toc-h1"><a href="#References">References </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2021-07-21-Prioritized-Experience-Replay.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Experience-Replay">
+<a class="anchor" href="#Experience-Replay" aria-hidden="true"><span class="octicon octicon-link"></span></a>Experience Replay<a class="anchor-link" href="#Experience-Replay"> </a>
+</h1>
+<ul>
+<li>Online Reinforcement Learning (RL) agents update their parameter as they make observation.</li>
+<li>Two Issues:<ul>
+<li>Strongly correlated updates (breaks i.i.d assumption of stochastic optimizers)</li>
+<li>Rare events are immediately discarded</li>
+</ul>
+</li>
+<li>
+<em>Experience Replay</em> (<em>ER</em>) <a class="citation" href="#er">[Lin 1992]</a> stores the observation in a replay memory<ul>
+<li>Can mix recent and non-recent observations (no temporal correlation)</li>
+<li>Rare event can be re-used</li>
+</ul>
+</li>
+<li>ER reduce amount of observations required to learn and replace with computational and memory resources (cheaper)</li>
+</ul>
+<h1 id="Prioritized-ER">
+<a class="anchor" href="#Prioritized-ER" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prioritized ER<a class="anchor-link" href="#Prioritized-ER"> </a>
+</h1>
+<p>The intuition behind prioritized experience replay <a class="citation" href="#per">[Schaul et al. 2015]</a> is</p>
+<ul>
+<li>Some transitions are more informative than other<ul>
+<li>Transitions may be more or less surprising, redundant or task relevant</li>
+<li>Some transition may not be immediately useful (RL agent not mature enough)</li>
+</ul>
+</li>
+<li>Replay <em>important transitions</em> more frequently and therefore learn more efficiently.</li>
+</ul>
+<h2 id="Temporal-Difference-as-proxy-measurement">
+<a class="anchor" href="#Temporal-Difference-as-proxy-measurement" aria-hidden="true"><span class="octicon octicon-link"></span></a>Temporal Difference as proxy measurement<a class="anchor-link" href="#Temporal-Difference-as-proxy-measurement"> </a>
+</h2>
+<ul>
+<li>The magnitude of temporal difference (TD) error $\delta$ measures how far the value is from next-step bootstrap estimate <a class="citation" href="#Andre98generalizedprioritized">[Andre et al. 1998]</a>.</li>
+<li>Reasonable proxy as it indicates how "surprising" the transition is.
+<div class="flash flash-error">
+    <svg class="octicon octicon-alert octicon octicon-alert" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"></path></svg>
+    <strong>Warning: </strong>Ignores inherent stochasticity in reward and transitions (poor TD estimates).
+</div>
+<div class="flash flash-error">
+    <svg class="octicon octicon-alert octicon octicon-alert octicon octicon-alert" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"></path></svg>
+    <strong>Warning: </strong>Limitation from partial observability (unlearnable transitions)
+</div>
+</li>
+</ul>
+<h2 id="Greedy-TD-error-prioritization">
+<a class="anchor" href="#Greedy-TD-error-prioritization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Greedy TD-error prioritization<a class="anchor-link" href="#Greedy-TD-error-prioritization"> </a>
+</h2>
+<ul>
+<li>Algorithm<ul>
+<li>Stores last TD error of a transtion in replay buffer</li>
+<li>Transition with largest abs. TD error get replayed. Q-learning update $\propto$ TD-error</li>
+<li>New transition gets highest priority</li>
+</ul>
+</li>
+<li>Substantial reduction in training effort</li>
+<li>Implementation: Binary heap for priority queue<ul>
+<li>Sampling: $O(1)$</li>
+<li>Update: $O(log N)$</li>
+</ul>
+</li>
+</ul>
+<h3 id="Issues">
+<a class="anchor" href="#Issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Issues<a class="anchor-link" href="#Issues"> </a>
+</h3>
+<ul>
+<li>To avoid expensive sweep over entire replay memory, only replayed transition is updated
+<div class="flash flash-error">
+    <svg class="octicon octicon-alert octicon octicon-alert octicon octicon-alert octicon octicon-alert" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"></path></svg>
+    <strong>Warning: </strong>Transition with low TD-error in first visit may not be replayed for a while.
+</div>
+</li>
+<li>Sensitive to noise (stochastic reward, bootstrapping noise)</li>
+<li>Prone to over-fitting as high error transitions get replayed frequently (lack diversity)</li>
+</ul>
+<hr>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Stochastic-Prioritization">
+<a class="anchor" href="#Stochastic-Prioritization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stochastic Prioritization<a class="anchor-link" href="#Stochastic-Prioritization"> </a>
+</h1>
+<ul>
+<li>Interpolates between greedy and uniform random sampling</li>
+<li>Probability of sampling transition $i$ is given by </li>
+</ul>
+$$
+P(i) = \frac{p_i^\alpha}{\sum_k p_k^\alpha}
+$$<ul>
+<li>where,<ul>
+<li>$p_i$ is the <strong>priority of transition</strong>
+</li>
+<li>hyperparameter $\alpha$ determines how much prioritization to use (uniform sampling with $\alpha = 0$)</li>
+</ul>
+</li>
+<li>monotonic in transition priority</li>
+</ul>
+<h2 id="Variants">
+<a class="anchor" href="#Variants" aria-hidden="true"><span class="octicon octicon-link"></span></a>Variants<a class="anchor-link" href="#Variants"> </a>
+</h2>
+<ul>
+<li>
+<em>Proportional prioritization</em>: $p_i = |\delta_i| + \epsilon$</li>
+<li>
+<em>Rank based prioritization</em>: $p_i = \frac{1}{rank(i)}$ where $rank(i)$ is rank of transition if sorted $|\delta_i|$<ul>
+<li>insensitive to outlier and hence more robust</li>
+</ul>
+</li>
+</ul>
+<h2 id="Bias">
+<a class="anchor" href="#Bias" aria-hidden="true"><span class="octicon octicon-link"></span></a>Bias<a class="anchor-link" href="#Bias"> </a>
+</h2>
+<ul>
+<li>Stochastic updates relies on the update being from same distribution as its expectation</li>
+<li>Prioritized replay induce bias as it chages the update distribution</li>
+<li>bias correction using importance sampling weights
+$$w_i = \bigg(\frac{1}{N} \frac{1}{P(i)}\bigg)^\beta$$ </li>
+<li>where, <ul>
+<li>hyper parameter $\beta$ fully compensates for non-uniform $P(i)$ when $\beta = 1$.</li>
+<li>Normalize weights by $\frac{1}{\max_i w_i}$ for stability. </li>
+<li>this is applied to Q-learning by $w_i\delta_i$ (weighted IS)</li>
+</ul>
+</li>
+<li>Unbiased nature is most important towards the convergence at end of training.
+<div class="flash">
+    <svg class="octicon octicon-info octicon octicon-info octicon octicon-info" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
+    <strong>Note: </strong>Process is highly non-stationary (changing policy, state dist. and bootstrapped targets)
+</div>* Anneal the amount of correction over time.</li>
+<li>prioritization ensures high-error transitions are seen many times while IS correction reduces gradient magnitude.</li>
+</ul>
+<hr>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Implementation">
+<a class="anchor" href="#Implementation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implementation<a class="anchor-link" href="#Implementation"> </a>
+</h1>
+<h2 id="Rank-based-prioritization">
+<a class="anchor" href="#Rank-based-prioritization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Rank based prioritization<a class="anchor-link" href="#Rank-based-prioritization"> </a>
+</h2>
+<ul>
+<li>Approximate $cdf$ with piecewise linear function with $k$ equal size segments</li>
+<li>First, sample a segment and then sample uniformly within among transitions within segment</li>
+<li>for minibatch based learning:<ul>
+<li>choose $k$ to be size of minibatch</li>
+<li>sample one transition from each segment</li>
+</ul>
+</li>
+</ul>
+<h2 id="Propotional-prioritization">
+<a class="anchor" href="#Propotional-prioritization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Propotional prioritization<a class="anchor-link" href="#Propotional-prioritization"> </a>
+</h2>
+<ul>
+<li>Use sum tree</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Binary-Segment-Tree">
+<a class="anchor" href="#Binary-Segment-Tree" aria-hidden="true"><span class="octicon octicon-link"></span></a>Binary Segment Tree<a class="anchor-link" href="#Binary-Segment-Tree"> </a>
+</h3>
+<ul>
+<li>Efficiently calculate $\sum_k^i p_k^\alpha$, the cumulative probability,
+which is needed to sample.</li>
+<li>To find $\min p_i^\alpha$, which is needed for $\frac{1}{\max_i w_i}$.
+<div class="flash">
+    <svg class="octicon octicon-info octicon octicon-info octicon octicon-info octicon octicon-info" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
+    <strong>Note: </strong>We can also use a min-heap for this.
+</div>Binary Segment Tree lets us calculate these in $\mathcal{O}(\log n)$
+time, which is way more efficient that the naive $\mathcal{O}(n)$
+approach.</li>
+</ul>
+<p>A Binary Segment Tree is a data structure that allows answering range queries 
+over an array effectively, while still being flexible enough to allow modifying the array.</p>
+<p>This is how a binary segment tree works for sum (it is similar for minimum)</p>
+<ul>
+<li>Let $x_i$ where $i \in \{1, 2 \cdots, N\}$ be the list of $N$ values we want to represent.</li>
+<li>Let $b_{h,j}$ be the $j^{\mathop{th}}$ node at height $h^{\mathop{th}}$ in the binary tree.</li>
+<li>The two children of node $b_{h,j}$ are $b_{h+1,2j}$ and $b_{h+1,2j + 1}$.</li>
+<li>The leaf nodes are at height $H = \left\lceil {1 + \log_2 N} \right\rceil$ will have values of $x$.</li>
+</ul>
+<p>Every node keeps the sum of the two child nodes. That is, the root node keeps the sum of the entire 
+array of values. The left and right children of the root node keep the sum of the first half of the 
+array andthe sum of the second half of the array, respectively. and so on</p>
+<p>
+$$b_{h,j} = \sum_{k = (j -1) * 2^{H - h} + 1}^{j * 2^{H - h}} x_k$$
+
+Number of nodes at height $h$,
+
+$$N_h = \left\lceil{\frac{N}{H - h + 1}} \right\rceil$$
+
+This is equal to the sum of nodes in all levels above $h$.
+So we can use a single array $a$ to store the tree, where,
+
+$$b_{h,j} \rightarrow a_{N_h + j}$$
+</p>
+<p>Then child nodes of $a_i$ are $a_{2i}$ and $a_{2i + 1}$.
+That is,
+
+$$a_i = a_{2i} + a_{2i + 1}$$
+</p>
+<p>This way of maintaining binary trees is very easy to program.
+</p>
+<div class="flash">
+    <svg class="octicon octicon-info octicon octicon-info octicon octicon-info octicon octicon-info octicon octicon-info" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
+    <strong>Note: </strong>indexing starting from 1.
+</div>
+<div class="flash">
+    <svg class="octicon octicon-info octicon octicon-info octicon octicon-info octicon octicon-info octicon octicon-info octicon octicon-info" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
+    <strong>Note: </strong>We use the same structure to compute the minimum.
+</div>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Transition</span><span class="p">():</span>
+    <span class="n">current_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">next_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="k">class</span> <span class="nc">PriorityExperienceReplayBuffer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        ### Initialize</span>
+<span class="sd">        """</span>
+        <span class="c1"># We use a power of $2$ for capacity because it simplifies the code and debugging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="n">capacity</span>
+        <span class="c1"># $\alpha$</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+
+        <span class="c1"># Maintain segment binary trees to take sum and find minimum over a range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority_min</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">'inf'</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">)]</span>
+
+        <span class="c1"># Current max priority, $p$, to be assigned to new transitions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_priority</span> <span class="o">=</span> <span class="mf">1.</span>
+
+        <span class="c1"># Arrays for buffer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">Transition</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">capacity</span><span class="p">)]</span>
+        <span class="c1"># We use cyclic buffers to store data, and `next_idx` keeps the index of the next empty</span>
+        <span class="c1"># slot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Size of the buffer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        ### Add sample to queue</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># Get next available slot</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_idx</span>
+
+        <span class="c1"># store in the queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">transition</span>
+
+        <span class="c1"># Increment next available slot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="c1"># Calculate the size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># $p_i^\alpha$, new samples get `max_priority`</span>
+        <span class="n">priority_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_priority</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span>
+        <span class="c1"># Update the two segment trees for sum and minimum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_priority_min</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">priority_alpha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_priority_sum</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">priority_alpha</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_priority_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">priority_alpha</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        #### Set priority in binary segment tree for minimum</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># Leaf of the binary tree</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority_min</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority_alpha</span>
+
+        <span class="c1"># Update tree, by traversing along ancestors.</span>
+        <span class="c1"># Continue until the root of the tree.</span>
+        <span class="k">while</span> <span class="n">idx</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># Get the index of the parent node</span>
+            <span class="n">idx</span> <span class="o">//=</span> <span class="mi">2</span>
+            <span class="c1"># Value of the parent node is the minimum of it's two children</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">priority_min</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">priority_min</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_min</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_set_priority_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">priority</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        #### Set priority in binary segment tree for sum</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># Leaf of the binary tree</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="c1"># Set the priority at the leaf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span>
+
+        <span class="c1"># Update tree, by traversing along ancestors.</span>
+        <span class="c1"># Continue until the root of the tree.</span>
+        <span class="k">while</span> <span class="n">idx</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># Get the index of the parent node</span>
+            <span class="n">idx</span> <span class="o">//=</span> <span class="mi">2</span>
+            <span class="c1"># Value of the parent node is the sum of it's two children</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        #### $\sum_k p_k^\alpha$</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># The root node keeps the sum of all values</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        #### $\min_k p_k^\alpha$</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># The root node keeps the minimum of all values</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_min</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">find_prefix_sum_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix_sum</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        #### Find largest $i$ such that $\sum_{k=1}^{i} p_k^\alpha  \le P$</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># Start from the root</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">:</span>
+            <span class="c1"># If the sum of the left branch is higher than required sum</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="n">idx</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">prefix_sum</span><span class="p">:</span>
+                <span class="c1"># Go to left branch of the tree</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">idx</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Otherwise go to right branch and reduce the sum of left</span>
+                <span class="c1">#  branch from required sum</span>
+                <span class="n">prefix_sum</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="n">idx</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># We are at the leaf node. Subtract the capacity by the index in the tree</span>
+        <span class="c1"># to get the index of actual value</span>
+        <span class="k">return</span> <span class="n">idx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        ### Sample from buffer</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># Initialize samples</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">'weights'</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+            <span class="s1">'indexes'</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Get sample indexes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum</span><span class="p">()</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_prefix_sum_idx</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">samples</span><span class="p">[</span><span class="s1">'indexes'</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx</span>
+
+        <span class="c1"># $\min_i P(i) = \frac{\min_i p_i^\alpha}{\sum_k p_k^\alpha}$</span>
+        <span class="n">prob_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum</span><span class="p">()</span>
+        <span class="c1"># $\max_i w_i = \bigg(\frac{1}{N} \frac{1}{\min_i P(i)}\bigg)^\beta$</span>
+        <span class="n">max_weight</span> <span class="o">=</span> <span class="p">(</span><span class="n">prob_min</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="s1">'indexes'</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="c1"># $P(i) = \frac{p_i^\alpha}{\sum_k p_k^\alpha}$</span>
+            <span class="n">prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_sum</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum</span><span class="p">()</span>
+            <span class="c1"># $w_i = \bigg(\frac{1}{N} \frac{1}{P(i)}\bigg)^\beta$</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="p">(</span><span class="n">prob</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span>
+            <span class="c1"># Normalize by $\frac{1}{\max_i w_i}$,</span>
+            <span class="c1">#  which also cancels off the $\frac{1}{N}$ term</span>
+            <span class="n">samples</span><span class="p">[</span><span class="s1">'weights'</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">/</span> <span class="n">max_weight</span>
+
+        <span class="c1"># Get samples data</span>
+        <span class="n">samples</span><span class="p">[</span><span class="s1">'transitions'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="s1">'indexes'</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">samples</span>
+
+    <span class="k">def</span> <span class="nf">update_priorities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">priorities</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        ### Update priorities</span>
+<span class="sd">        """</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">priority</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">priorities</span><span class="p">):</span>
+            <span class="c1"># Set current max priority</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_priority</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_priority</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+            <span class="c1"># Calculate $p_i^\alpha$</span>
+            <span class="n">priority_alpha</span> <span class="o">=</span> <span class="n">priority</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span>
+            <span class="c1"># Update the trees</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_priority_min</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">priority_alpha</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_priority_sum</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">priority_alpha</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">is_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        ### Whether the buffer is full</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="References">
+<a class="anchor" href="#References" aria-hidden="true"><span class="octicon octicon-link"></span></a>References<a class="anchor-link" href="#References"> </a>
+</h1>
+<p></p>
+<ol class="bibliography">
+<li><span id="er"><span style="font-variant: small-caps">Lin, L.-J.I.</span> 1992. Self-improving reactive agents based on reinforcement learning, planning and teaching. <i>Machine Learning</i>, 293–321.</span></li>
+<li><span id="per"><span style="font-variant: small-caps">Schaul, T., Quan, J., Antonoglou, I., and Silver, D.</span> 2015. Prioritized Experience Replay. http://arxiv.org/abs/1511.05952.</span></li>
+<li><span id="Andre98generalizedprioritized"><span style="font-variant: small-caps">Andre, D., Friedman, N., and Parr, R.</span> 1998. Generalized Prioritized Sweeping. <i>Advances in Neural Information Processing Systems</i>, MIT Press.</span></li>
+</ol>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="agupta83/annotated_notes"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/annotated_notes/rl/2021/07/21/Prioritized-Experience-Replay.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/annotated_notes/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/annotated_notes/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/annotated_notes/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Just my notes</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/agupta83" title="agupta83"><svg class="svg-icon grey"><use xlink:href="/annotated_notes/assets/minima-social-icons.svg#github"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
